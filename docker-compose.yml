@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  mysqldb:
+    image: mariadb:10.4.8
+    container_name: mysqldb
+    command: mysqld --sql-mode='' --innodb-strict-mode=FALSE --wait-timeout=28800
+    env_file:
+      - .env
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:cached
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3336:3306"
+    healthcheck:
+      test: "exit 0"
+    networks:
+        - netjs-pgsql-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    links:
+      - mysqldb
+    ports:
+      - 8888:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - netjs-pgsql-network
+
+  # nestjs-pgsql-api:
+  #   image: ecwo/nestjs-pgsql-api:1.0
+  #   volumes:
+  #     - .:/app
+  #   # entrypoint: ["/app/bin/waitfordb.sh"]
+  #   command: npm run start:dev
+  #   restart: on-failure
+  #   container_name: api
+  #   restart: on-failure
+  #   environment:
+  #     - NODE_ENV=development
+  #     - SET_CONTAINER_TIMEZONE=true
+  #     - CONTAINER_TIMEZONE=Americas/Fortaleza
+  #     - TZ=Americas/Fortaleza
+  #   ports:
+  #     - "3333:3000"
+  #   depends_on:
+  #     - "mysqldb"
+  #   networks:
+  #     - netjs-pgsql-network
+
+networks:
+  netjs-pgsql-network:
+    external: true
